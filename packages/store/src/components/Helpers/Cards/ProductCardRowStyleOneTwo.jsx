@@ -25,7 +25,7 @@ export default function ProductCardRowStyleOneTwo({ className, datas }) {
           <div>
             <Link to="/single-product">
               <p className="title mb-2 sm:text-[20px] text-[15px] font-600 text-qblack leading-[24px] line-clamp-2 hover:text-blue-600">
-                {datas.name}
+                {datas.title}
               </p>
             </Link>
             <p className="price flex space-x-2 items-center  mb-2.5">

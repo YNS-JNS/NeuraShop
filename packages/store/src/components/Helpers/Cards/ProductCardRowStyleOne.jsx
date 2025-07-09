@@ -34,7 +34,7 @@ export default function ProductCardRowStyleTwo({ className, datas, type }) {
             </div>
             <Link to="/single-product">
               <p className="title mb-2 sm:text-[15px] text-[13px] font-600 text-qblack leading-[24px] line-clamp-2 hover:text-blue-600">
-                {datas.name}
+                {datas.title}
               </p>
             </Link>
             <p className="price mb-[26px]">
