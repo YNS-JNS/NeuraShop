@@ -93,7 +93,7 @@ export default function ProductCardStyleOne({ datas, type }) {
         </div>
         <Link to="/single-product">
           <p className="title mb-2 text-[15px] font-600 text-qblack leading-[24px] line-clamp-2 hover:text-blue-600">
-            {datas.name}
+            {datas.title}
           </p>
         </Link>
         <p className="price">
