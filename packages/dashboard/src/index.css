@@ -1,0 +1,112 @@
+/* /src/index.css */
+
+/*
+ * =================================================================
+ * POINT D'ENTRÉE GLOBAL DES STYLES
+ * =================================================================
+*/
+
+/* 1. Importer les polices depuis Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* 2. Importer les variables de thème depuis notre fichier dédié */
+@import './styles/theme.css';
+
+/* 3. Importer les couches de base de Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 4. Styles de base pour l'application (body, reset, etc.) */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'rlig' 1, 'calt' 1; /* Amélioration de la ligature des polices */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* --- New --- */
+  /* Pour des transitions fluides sur les éléments interactifs */
+  button,
+  a,
+  input[type='checkbox'],
+  input[type='radio'] {
+    @apply transition-all duration-200 ease-in-out;
+  }
+  /* Amélioration des indicateurs de focus pour l'accessibilité */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  /* --- *** --- */
+}
+
+/* 5. Classes utilitaires personnalisées */
+@layer utilities {
+  /* Classes sémantiques pour la typographie */
+  .page-title {
+    @apply text-2xl font-bold sm:text-3xl lg:text-4xl xl:text-5xl;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold lg:text-xl xl:text-2xl;
+  }
+
+  /* .page-title {
+    @apply font-heading text-3xl font-bold sm:text-4xl lg:text-5xl;
+  }
+  
+  .section-title {
+    @apply font-heading text-3xl font-semibold lg:text-2xl;
+  } */
+
+  .stat-value {
+    @apply text-2xl font-bold lg:text-3xl xl:text-4xl;
+  }
+
+  /* Utilitaires pour les composants */
+  .card-hover {
+    @apply transition-shadow duration-300 hover:shadow-lg;
+  }
+
+  .button-icon {
+    @apply h-4 w-4 lg:h-5 lg:w-5;
+  }
+
+  /* Utilitaires de mise en page réactifs */
+  .responsive-grid-1-2 {
+    @apply grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 lg:gap-8 xl:gap-10;
+  }
+
+  .responsive-grid-1-4 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:gap-6 lg:grid-cols-4 xl:gap-8;
+  }
+
+  .responsive-spacing {
+    @apply space-y-4 sm:space-y-6 lg:space-y-8 xl:space-y-10;
+  }
+
+  .responsive-padding {
+    @apply p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10;
+  }
+
+  /* Autres utilitaires */
+  .full-width-container {
+    @apply w-full max-w-none mx-auto;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
