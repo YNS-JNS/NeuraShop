@@ -1,6 +1,7 @@
 import { productService } from '../services/product.service.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js'; // Nous allons créer ce fichier !
+import { PublicProductDto } from '../dto/public/product.dto.js'; // DTO
 
 // --- Contrôleurs pour l'Admin Dashboard ---
 
@@ -31,21 +32,25 @@ const deleteAdminProduct = asyncHandler(async (req, res) => {
 
 // --- Contrôleurs pour le Store Front Public ---
 
-// Fonction de transformation pour le store
-const transformProductForStore = (product) => ({
-  id: product._id,
-  name: product.name,
-  image: product.images[0],
-  brand: product.brand,
-  review: product.averageRating,
-  price: product.price,
-  offerPrice: product.offerPrice,
-});
-
 const getPublicProducts = asyncHandler(async (req, res) => {
   const productsFromDB = await productService.getAllProducts({ status: 'active' });
-  const productsForStore = productsFromDB.map(transformProductForStore);
+
+  // Utilisation le DTO pour transformer la liste
+  const productsForStore = productsFromDB.map((product) => new PublicProductDto(product));
+
   return res.status(200).json(new ApiResponse(200, productsForStore));
+});
+
+const getPublicProductDetails = asyncHandler(async (req, res) => {
+  const productFromDB = await productService.getProductById(req.params.id);
+  if (productFromDB.status !== 'active') {
+    throw new ApiError(404, 'Product not found');
+  }
+
+  // Utiliser le DTO pour transformer l'objet unique.
+  const productForStore = new PublicProductDto(productFromDB);
+
+  return res.status(200).json(new ApiResponse(200, productForStore));
 });
 
 export const productController = {
@@ -55,4 +60,5 @@ export const productController = {
   updateAdminProduct,
   deleteAdminProduct,
   getPublicProducts,
+  getPublicProductDetails
 };
