@@ -21,12 +21,13 @@ app.use(express.urlencoded({ extended: true, limit: '16kb' }));
 
 // --- Importation des Routes ---
 // TODO: Importer les routes ici
-// import productAdminRoutes from './routes/admin/product.routes.js';
-// import productPublicRoutes from './routes/public/product.routes.js';
+import productAdminRoutes from './routes/admin/product.routes.js';
+import productPublicRoutes from './routes/public/product.routes.js';
 
 // --- Déclaration des Routes ---
-// app.use('/api/v1/admin/products', productAdminRoutes);
-// app.use('/api/v1/public/products', productPublicRoutes);
+// On utilise une version d'API (v1), c'est une bonne pratique
+app.use('/api/v1/admin/products', productAdminRoutes);
+app.use('/api/v1/public/products', productPublicRoutes);
 
 // --- Middleware de Gestion des Erreurs ---
 // Doit être le dernier middleware ajouté
