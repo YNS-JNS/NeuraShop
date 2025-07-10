@@ -1,9 +1,16 @@
 import { Router } from 'express';
 import { productController } from '../../controllers/product.controller.js';
+import { verifyJWT, authorizeRoles } from '../../middleware/auth.middleware.js';
 
 const router = Router();
 
+// Appliquer les middlewares de sécurité à TOUTES les routes de ce fichier
+router.use(verifyJWT, authorizeRoles('admin'));
+
 // Routes CRUD complètes pour les produits côté admin
+// Toutes les routes CRUD sont maintenant protégées.
+// Seul un utilisateur authentifié avec le rôle "admin" peut y accéder.
+
 router
   .route('/')
   .post(productController.createAdminProduct)
