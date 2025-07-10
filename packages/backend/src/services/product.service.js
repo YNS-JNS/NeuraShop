@@ -12,22 +12,23 @@ const createProduct = async (productData) => {
 };
 
 /**
- * Service pour récupérer tous les produits avec un filtre optionnel.
- * @param {object} filter - Filtre Mongoose (ex: { status: 'active' }).
+ * Service pour récupérer tous les produits avec un filtre optionnel
+ * et peupler les catégories et les tags.
+ * @param {object} filter - Filtre Mongoose.
  * @returns {Promise<Array<Document>>} Un tableau de produits.
  */
 const getAllProducts = async (filter = {}) => {
-  return await Product.find(filter);
+  return await Product.find(filter).populate('category').populate('tags');
 };
 
 /**
- * Service pour récupérer un produit par son ID.
+ * Service pour récupérer un produit par son ID
+ * et peupler ses catégories et tags.
  * @param {string} productId - L'ID du produit.
  * @returns {Promise<Document>} Le document du produit.
- * @throws {ApiError} Si le produit n'est pas trouvé.
  */
 const getProductById = async (productId) => {
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).populate('category').populate('tags');
   if (!product) {
     throw new ApiError(404, 'Product not found');
   }
