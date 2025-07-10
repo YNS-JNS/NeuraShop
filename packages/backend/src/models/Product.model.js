@@ -17,7 +17,11 @@ const productSchema = new mongoose.Schema(
     sku: { type: String, required: true, unique: true, trim: true },
     status: { type: String, enum: ['active', 'draft', 'archived'], default: 'draft' },
     description: { type: String, required: true },
-    category: { type: String, required: true, trim: true },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category', // Référence au modèle Category
+      required: true,
+    },
     brand: { type: String, trim: true },
     images: { type: [String], required: true },
     price: { type: Number, required: true, min: 0 },
@@ -25,6 +29,13 @@ const productSchema = new mongoose.Schema(
     stock: { type: Number, required: true, default: 0, min: 0 },
     reviews: { type: [reviewSchema] },
     isCampaignProduct: { type: Boolean, default: false },
+    // On a ajouter ce champ pour les tags
+    tags: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Tag', // Référence au modèle Tag
+      },
+    ],
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
