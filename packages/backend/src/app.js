@@ -10,8 +10,8 @@ import authRoutes from './routes/auth.routes.js';
 import categoryAdminRoutes from './routes/admin/category.routes.js';
 import tagAdminRoutes from './routes/admin/tag.routes.js';
 import orderRoutes from './routes/order.routes.js';
-import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import {paymentController} from './controllers/payment.controller.js';
 
 const app = express();
 
