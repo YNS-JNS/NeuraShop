@@ -1,3 +1,4 @@
+import { uploadOnCloudinary } from '../config/cloudinary.js';
 import Product from '../models/Product.model.js';
 import * as factory from './handlerFactory.js';
 import { PublicProductDto } from '../dto/public/product.dto.js';
@@ -10,7 +11,38 @@ import { APIFeatures } from '../utils/APIFeatures.js';
 // Options pour peupler les champs de référence
 const adminPopulateOptions = [{ path: 'category' }, { path: 'tags' }];
 
-export const createAdminProduct = factory.createOne(Product);
+// export const createAdminProduct = factory.createOne(Product);
+export const createAdminProduct = asyncHandler(async (req, res) => {
+  // 1. Gérer l'upload des images
+  const imageFiles = req.files?.images; // 'images' doit correspondre au nom du champ dans le formulaire
+  if (!imageFiles || imageFiles.length === 0) {
+    throw new ApiError(400, 'Au moins une image est requise.');
+  }
+
+  const imageUrls = [];
+  for (const file of imageFiles) {
+    const cloudinaryResponse = await uploadOnCloudinary(file.path);
+    if (cloudinaryResponse) {
+      imageUrls.push(cloudinaryResponse.secure_url);
+    }
+  }
+
+  if (imageUrls.length === 0) {
+    throw new ApiError(500, "Erreur lors de l'upload des images.");
+  }
+
+  // 2. Préparer les données du produit avec les URLs de Cloudinary
+  const productData = {
+    ...req.body,
+    images: imageUrls,
+  };
+
+  // 3. Créer le produit en utilisant la factory
+  const product = await Product.create(productData);
+
+  return res.status(201).json(new ApiResponse(201, product, 'Product created successfully'));
+});
+
 export const getAdminProducts = factory.getAll(Product); //  Utilise => APIFeatures !
 export const getAdminProductDetails = factory.getOne(Product, adminPopulateOptions);
 export const updateAdminProduct = factory.updateOne(Product);
@@ -61,7 +93,6 @@ export const getPublicProducts = asyncHandler(async (req, res) => {
   // La query pour compter le total doit être identique
   const totalQueryFeatures = new APIFeatures(countQuery, queryForFeatures).filter();
   const totalDocuments = await Product.countDocuments(totalQueryFeatures.query.getFilter());
-
 
   res.status(200).json(
     new ApiResponse(
