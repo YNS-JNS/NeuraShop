@@ -9,6 +9,7 @@ import productPublicRoutes from './routes/public/product.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import categoryAdminRoutes from './routes/admin/category.routes.js';
 import tagAdminRoutes from './routes/admin/tag.routes.js';
+import orderRoutes from './routes/order.routes.js';
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/v1/admin/products', productAdminRoutes);
 app.use('/api/v1/admin/categories', categoryAdminRoutes);
 app.use('/api/v1/admin/tags', tagAdminRoutes);
 app.use('/api/v1/public/products', productPublicRoutes);
+app.use('/api/v1/orders', orderRoutes);
 
 // --- Middleware de Gestion des Erreurs ---
 // Doit être le dernier middleware ajouté
