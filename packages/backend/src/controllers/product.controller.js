@@ -24,10 +24,15 @@ export const getPublicProducts = asyncHandler(async (req, res) => {
 
   // 1) Initialiser APIFeatures avec le filtre de base
   const features = new APIFeatures(Product.find(), req.query)
+    .search() // la recherche
     .filter()
     .sort()
     .limitFields()
     .paginate();
+  
+  if (req.query.search && !req.query.sort) {
+    features.query = features.query.sort({ score: { $meta: 'textScore' } });
+  }
 
   // 2) Exécuter la requête
   const productsFromDB = await features.query.populate('category').populate('tags');

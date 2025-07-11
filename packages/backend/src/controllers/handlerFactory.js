@@ -69,16 +69,22 @@ export const getAll = (Model) =>
 
     // 1) Initialiser APIFeatures
     const features = new APIFeatures(Model.find(), req.query)
+      .search() // <-- APPELER LA RECHERCHE EN PREMIER
       .filter()
-      .sort()
+      .sort() // <-- Mettre à jour le tri pour gérer le score
       .limitFields()
       .paginate();
+
+    // Si une recherche a été effectuée, on trie par pertinence par défaut
+    if (req.query.search && !req.query.sort) {
+      features.query = features.query.sort({ score: { $meta: 'textScore' } });
+    }
 
     // 2) Exécuter la requête
     const docs = await features.query;
 
-    // 3) (Optionnel mais recommandé) Obtenir le total des documents pour la pagination
-    const totalQuery = new APIFeatures(Model.find(), req.query).filter();
+    // 3) Obtenir le total des documents pour la pagination
+    const totalQuery = new APIFeatures(Model.find(), req.query).search().filter();
     const totalDocuments = await Model.countDocuments(totalQuery.query.getFilter());
 
     // 4) Envoyer la réponse

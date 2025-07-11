@@ -17,18 +17,18 @@ class APIFeatures {
   filter() {
     // 1A) Créer une copie de l'objet de querystring
     const queryObj = { ...this.queryString };
-    
+
     // 1B) Exclure les champs spéciaux (pagination, tri, etc.)
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(el => delete queryObj[el]);
+    excludedFields.forEach((el) => delete queryObj[el]);
 
     // 1C) Filtrage avancé (opérateurs de comparaison)
     let queryStr = JSON.stringify(queryObj);
     // Ajoute le '$' devant les opérateurs pour que Mongoose les comprenne
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
     this.query = this.query.find(JSON.parse(queryStr));
-    
+
     return this; // Permet de chaîner les méthodes
   }
 
@@ -75,6 +75,22 @@ class APIFeatures {
 
     this.query = this.query.skip(skip).limit(limit);
 
+    return this;
+  }
+
+  /**
+   * Applique la recherche textuelle à la requête si un paramètre 'search' est présent.
+   * Doit être appelée AVANT la méthode .filter()
+   * Ex: ?search=casque+bluetooth
+   */
+  search() {
+    if (this.queryString.search) {
+      this.query = this.query.find(
+        { $text: { $search: this.queryString.search } },
+        { score: { $meta: 'textScore' } }, // un champ 'score' pour la pertinence
+        // { score: { $meta: "textScore" } } est une astuce très puissante : elle demande à MongoDB de créer un champ virtuel score sur chaque résultat, indiquant sa pertinence. Nous pourrons ensuite trier par ce score.
+      );
+    }
     return this;
   }
 }
