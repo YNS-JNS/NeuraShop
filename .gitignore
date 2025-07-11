@@ -21,6 +21,7 @@ yarn-error.log*
 .env.*.local
 packages/*/.env
 packages/*/.env.local
+/packages/backend/public/temp/
 
 # Fichiers de système d'exploitation
 .DS_Store
