@@ -9,8 +9,16 @@ import productPublicRoutes from './routes/public/product.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import categoryAdminRoutes from './routes/admin/category.routes.js';
 import tagAdminRoutes from './routes/admin/tag.routes.js';
+import orderRoutes from './routes/order.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
+import {paymentController} from './controllers/payment.controller.js';
 
 const app = express();
+
+// --- Déclaration de la Route Webhook AVANT express.json() ---
+// La route du webhook doit recevoir le corps de la requête "brut" (raw).
+// On la déclare donc avant que le middleware express.json() ne la parse.
+app.use('/api/v1/payments/webhook', express.raw({ type: 'application/json' }), paymentController.stripeWebhookHandler);
 
 // --- Configuration des Middlewares ---
 
@@ -34,10 +42,13 @@ app.use(cookieParser());
 // --- Déclaration des Routes ---
 // On utilise une version d'API (v1), c'est une bonne pratique
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/admin/products', productAdminRoutes);
 app.use('/api/v1/admin/categories', categoryAdminRoutes);
 app.use('/api/v1/admin/tags', tagAdminRoutes);
 app.use('/api/v1/public/products', productPublicRoutes);
+
 
 // --- Middleware de Gestion des Erreurs ---
 // Doit être le dernier middleware ajouté
