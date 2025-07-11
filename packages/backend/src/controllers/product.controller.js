@@ -21,8 +21,11 @@ export const createAdminProduct = asyncHandler(async (req, res) => {
   }
 
   const imageUrls = [];
+  // Définir le nom du dossier pour les images de produits
+  const FOLDER_NAME = 'ecommerce/products';
+
   for (const file of imageFiles) {
-    const cloudinaryResponse = await uploadOnCloudinary(file.path);
+    const cloudinaryResponse = await uploadOnCloudinary(file.path, FOLDER_NAME);
     if (cloudinaryResponse) {
       imageUrls.push(cloudinaryResponse.secure_url);
     }

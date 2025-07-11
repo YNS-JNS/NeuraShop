@@ -9,18 +9,20 @@ cloudinary.config({
 });
 
 /**
- * Fonction pour uploader un fichier local vers Cloudinary.
+ * Fonction pour uploader un fichier local vers Cloudinary dans un dossier spécifique.
  * @param {string} localFilePath - Le chemin du fichier temporaire sur le serveur.
+ * @param {string} folderName - Le nom du dossier de destination sur Cloudinary.
  * @returns {Promise<object|null>} - L'objet de réponse de Cloudinary ou null en cas d'échec.
  */
-const uploadOnCloudinary = async (localFilePath) => {
+const uploadOnCloudinary = async (localFilePath, folderName = 'default_folder') => {
   try {
     if (!localFilePath) return null;
 
     // Uploader le fichier sur Cloudinary
-    const response = await cloudinary.uploader.upload(localFilePath, {
-      resource_type: 'auto', // Détecte automatiquement le type de fichier (image, vidéo, etc.)
-    });
+      const response = await cloudinary.uploader.upload(localFilePath, {
+        folder: folderName,
+        resource_type: 'auto', // Détecte automatiquement le type de fichier (image, vidéo, etc.)
+      });
 
     // Le fichier a été uploadé avec succès
     // console.log("File is uploaded on Cloudinary:", response.url);
