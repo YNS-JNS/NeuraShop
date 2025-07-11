@@ -5,6 +5,7 @@ import { PublicProductDto } from '../dto/public/product.dto.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import { APIFeatures } from '../utils/APIFeatures.js';
+import { ApiError } from '../utils/ApiError.js';
 
 // --- Contrôleurs pour l'Admin Dashboard (utilisent maintenant la factory) ---
 
