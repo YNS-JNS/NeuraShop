@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
+import { APIFeatures } from '../utils/APIFeatures.js';
 
 /**
  * Factory pour créer un handler de suppression générique.
@@ -59,12 +60,44 @@ export const getOne = (Model, popOptions) =>
 
 /**
  * Factory pour créer un handler de récupération de tous les documents génériques.
+ * Intègre maintenant les fonctionnalités de filtrage, tri, sélection de champs et pagination.
  * @param {import('mongoose').Model} Model - Le modèle Mongoose à utiliser.
  */
 export const getAll = (Model) =>
   asyncHandler(async (req, res, next) => {
-    // Pour des fonctionnalités de filtrage avancées plus tard
-    const features = {};
-    const docs = await Model.find(features);
-    res.status(200).json(new ApiResponse(200, docs));
+    // --- NOUVELLE LOGIQUE ---
+
+    // 1) Initialiser APIFeatures
+    const features = new APIFeatures(Model.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+
+    // 2) Exécuter la requête
+    const docs = await features.query;
+
+    // 3) (Optionnel mais recommandé) Obtenir le total des documents pour la pagination
+    const totalQuery = new APIFeatures(Model.find(), req.query).filter();
+    const totalDocuments = await Model.countDocuments(totalQuery.query.getFilter());
+
+    // 4) Envoyer la réponse
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          results: docs.length,
+          data: docs,
+        },
+        'Documents retrieved successfully',
+        {
+          pagination: {
+            currentPage: parseInt(req.query.page, 10) || 1,
+            limit: parseInt(req.query.limit, 10) || 100,
+            totalPages: Math.ceil(totalDocuments / (parseInt(req.query.limit, 10) || 100)),
+            totalDocuments,
+          },
+        },
+      ),
+    );
   });
