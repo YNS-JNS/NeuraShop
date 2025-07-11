@@ -40,6 +40,26 @@ const productSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
+// --- Indexation ---
+// Création d'un index de texte sur les champs 'name', 'description' et 'brand'.
+// Cela permet d'utiliser l'opérateur $text pour des recherches performantes.
+// Les 'weights' indiquent que le champ 'name' est plus important que 'description', etc.
+productSchema.index(
+  {
+    name: 'text',
+    description: 'text',
+    brand: 'text'
+  },
+  {
+    weights: {
+      name: 10,  // Un mot trouvé dans le nom a 10 fois plus de poids
+      brand: 5,   // Un mot trouvé dans la marque a 5 fois plus de poids
+      description: 1 // Un mot trouvé dans la description a un poids de base
+    },
+    name: 'TextIndex'
+  }
+);
+
 // Champ virtuel pour calculer la note moyenne
 productSchema.virtual('averageRating').get(function () {
   if (!this.reviews || this.reviews.length === 0) return 0;
