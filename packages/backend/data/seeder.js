@@ -30,17 +30,16 @@ const connectDB = async () => {
   }
 };
 
-
 const importData = async () => {
   try {
-    // 1. Nettoyer la base de données 
+    // 1. Nettoyer la base de données
     console.log('Clearing data...');
     await Product.deleteMany();
     await Category.deleteMany();
     await Tag.deleteMany();
     console.log('Data cleared.');
 
-    // 2. Insérer les catégories et les tags 
+    // 2. Insérer les catégories et les tags
     const createdCategories = await Category.insertMany(categories);
     const createdTags = await Tag.insertMany(tags);
     console.log('Categories & Tags Imported!');
@@ -67,9 +66,9 @@ const importData = async () => {
         price: parseFloat((Math.random() * 200 + 10).toFixed(2)), // Prix aléatoire entre 10 et 210
         stock: Math.floor(Math.random() * 250), // Stock aléatoire
         tags: [randomTag1._id, randomTag2._id],
-        isCampaignProduct: i % 7 === 0 // 1 produit sur 7 est en campagne
+        isCampaignProduct: i % 7 === 0, // 1 produit sur 7 est en campagne
       };
-      
+
       // Ajouter un prix promotionnel pour certains produits
       if (i % 5 === 0) {
         product.offerPrice = parseFloat((product.price * 0.8).toFixed(2));
@@ -82,7 +81,7 @@ const importData = async () => {
     // 4. Insérer les produits générés
     await Product.insertMany(productsToCreate);
     console.log('Products Imported!');
-    
+
     console.log('✅ Data Imported Successfully!');
     process.exit();
   } catch (error) {
