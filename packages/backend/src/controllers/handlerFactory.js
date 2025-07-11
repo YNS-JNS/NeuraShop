@@ -58,36 +58,48 @@ export const getOne = (Model, popOptions) =>
     res.status(200).json(new ApiResponse(200, doc));
   });
 
-/**
+/***
  * Factory pour créer un handler de récupération de tous les documents génériques.
- * Intègre maintenant les fonctionnalités de filtrage, tri, sélection de champs et pagination.
+ * Gère maintenant la recherche textuelle pour tous les modèles qui le supportent.
  * @param {import('mongoose').Model} Model - Le modèle Mongoose à utiliser.
  */
 export const getAll = (Model) =>
   asyncHandler(async (req, res, next) => {
-    // --- NOUVELLE LOGIQUE ---
+    // 1. Préparer les requêtes
+    const queryForFeatures = { ...req.query };
+    let mongoQuery = Model.find();
 
-    // 1) Initialiser APIFeatures
-    const features = new APIFeatures(Model.find(), req.query)
-      .search() // <-- APPELER LA RECHERCHE EN PREMIER
+    // 2. Gérer la recherche textuelle comme un cas spécial
+    if (req.query.search) {
+      // Vérifier si le modèle a un index de texte pour éviter les erreurs
+      // Note : `Model.schema.indexes()` peut être complexe, une vérification sur le champ est plus simple.
+      // Pour l'instant, on suppose que seuls les produits l'ont, mais cette logique est extensible.
+      if (Model.modelName === 'Product') {
+        mongoQuery = mongoQuery.find({ $text: { $search: req.query.search } });
+      }
+      // On retire 'search' pour que .filter() ne le traite pas
+      delete queryForFeatures.search;
+    }
+
+    // 3. Appliquer les autres fonctionnalités via APIFeatures
+    const features = new APIFeatures(mongoQuery, queryForFeatures)
       .filter()
-      .sort() // <-- Mettre à jour le tri pour gérer le score
+      .sort() // .sort() gère déjà la pertinence si req.query.search existe
       .limitFields()
       .paginate();
 
-    // Si une recherche a été effectuée, on trie par pertinence par défaut
-    if (req.query.search && !req.query.sort) {
-      features.query = features.query.sort({ score: { $meta: 'textScore' } });
-    }
-
-    // 2) Exécuter la requête
+    // 4. Exécuter la requête principale
     const docs = await features.query;
 
-    // 3) Obtenir le total des documents pour la pagination
-    const totalQuery = new APIFeatures(Model.find(), req.query).search().filter();
-    const totalDocuments = await Model.countDocuments(totalQuery.query.getFilter());
+    // 5. Gérer le comptage pour la pagination
+    let countQuery = Model.find();
+    if (req.query.search && Model.modelName === 'Product') {
+      countQuery = countQuery.find({ $text: { $search: req.query.search } });
+    }
+    const totalQueryFeatures = new APIFeatures(countQuery, queryForFeatures).filter();
+    const totalDocuments = await Model.countDocuments(totalQueryFeatures.query.getFilter());
 
-    // 4) Envoyer la réponse
+    // 6) Envoyer la réponse
     res.status(200).json(
       new ApiResponse(
         200,

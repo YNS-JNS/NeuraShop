@@ -19,32 +19,50 @@ export const deleteAdminProduct = factory.deleteOne(Product);
 // --- Contrôleurs pour le Store Front Public (logique personnalisée) ---
 
 export const getPublicProducts = asyncHandler(async (req, res) => {
-  // On ajoute un filtre de base pour ne montrer que les produits actifs
-  req.query.status = 'active';
+  // Créez une copie des filtres de la requête pour pouvoir la modifier sans risque
+  const queryForFeatures = { ...req.query };
 
-  // 1) Initialiser APIFeatures avec le filtre de base
-  const features = new APIFeatures(Product.find(), req.query)
-    .search() // la recherche
+  // Le filtre de base qui est NON-NÉGOCIABLE pour cette route
+  const baseFilter = { status: 'active' };
+
+  // S'il y a un paramètre de recherche, on l'enlève de la copie
+  // pour que la méthode .filter() de APIFeatures ne le voie pas.
+  if (queryForFeatures.search) {
+    delete queryForFeatures.search;
+  }
+
+  // On initialise la requête Mongoose avec notre filtre de base
+  let mongoQuery = Product.find(baseFilter);
+
+  // S'il y avait une recherche, on l'ajoute manuellement à la requête Mongoose
+  if (req.query.search) {
+    mongoQuery = mongoQuery.find({ $text: { $search: req.query.search } });
+  }
+
+  // Maintenant, on passe la requête pré-filtrée et la querystring nettoyée à APIFeatures
+  const features = new APIFeatures(mongoQuery, queryForFeatures)
+    // On n'appelle plus .search() ici, car on l'a déjà géré
     .filter()
     .sort()
     .limitFields()
     .paginate();
-  
-  if (req.query.search && !req.query.sort) {
-    features.query = features.query.sort({ score: { $meta: 'textScore' } });
-  }
 
-  // 2) Exécuter la requête
   const productsFromDB = await features.query.populate('category').populate('tags');
 
-  // 3) Transformer les résultats avec notre DTO
+  // transformation (DTO) des produits pour le store front
   const productsForStore = productsFromDB.map((product) => new PublicProductDto(product));
 
-  // 4) Gérer les métadonnées de pagination
-  const totalQuery = new APIFeatures(Product.find(), req.query).filter();
-  const totalDocuments = await Product.countDocuments(totalQuery.query.getFilter());
+  // La query pour le comptage doit suivre EXACTEMENT la même logique
+  let countQuery = Product.find(baseFilter);
+  if (req.query.search) {
+    countQuery = countQuery.find({ $text: { $search: req.query.search } });
+  }
 
-  // 5) Envoyer la réponse
+  // La query pour compter le total doit être identique
+  const totalQueryFeatures = new APIFeatures(countQuery, queryForFeatures).filter();
+  const totalDocuments = await Product.countDocuments(totalQueryFeatures.query.getFilter());
+
+
   res.status(200).json(
     new ApiResponse(
       200,

@@ -36,13 +36,37 @@ class APIFeatures {
    * Applique le tri à la requête.
    * Ex: ?sort=-price,name
    */
+  // sort() {
+  //   if (this.queryString.sort) {
+  //     // Remplace la virgule par un espace pour Mongoose
+  //     const sortBy = this.queryString.sort.split(',').join(' ');
+  //     this.query = this.query.sort(sortBy);
+  //   } else {
+  //     // Tri par défaut (par date de création décroissante)
+  //     this.query = this.query.sort('-createdAt');
+  //   }
+  //   return this;
+  // }
+
+  /**
+   * Applique le tri à la requête.
+   * Si une recherche textuelle a été effectuée et qu'aucun tri n'est spécifié,
+   * trie par pertinence par défaut.
+   * Ex: ?sort=-price,name
+   */
   sort() {
+    // Si un tri est explicitement demandé dans l'URL
     if (this.queryString.sort) {
-      // Remplace la virgule par un espace pour Mongoose
       const sortBy = this.queryString.sort.split(',').join(' ');
       this.query = this.query.sort(sortBy);
-    } else {
-      // Tri par défaut (par date de création décroissante)
+    }
+    // Si une recherche textuelle est effectuée SANS tri explicite
+    else if (this.queryString.search) {
+      // On trie par le score de pertinence
+      this.query = this.query.sort({ score: { $meta: 'textScore' } });
+    }
+    // Tri par défaut pour toutes les autres requêtes
+    else {
       this.query = this.query.sort('-createdAt');
     }
     return this;
