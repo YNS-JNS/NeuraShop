@@ -3,6 +3,7 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import Order from '../models/Order.model.js';
+import Product from '../models/Product.model.js';
 
 // Initialiser Stripe avec la clé secrète
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -58,6 +59,55 @@ const createCheckoutSession = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, { url: session.url }, 'Checkout session created'));
 });
 
+/**
+ * Gère les événements entrants du webhook Stripe.
+ * C'est ici que l'on confirme la commande après un paiement réussi.
+ */
+const stripeWebhookHandler = asyncHandler(async (req, res) => {
+  // Le secret du webhook, à obtenir depuis le dashboard Stripe
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  
+  // 1. Vérifier la signature de l'événement pour s'assurer qu'il vient bien de Stripe
+  const signature = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
+  } catch (err) {
+    console.log(`⚠️  Webhook signature verification failed.`, err.message);
+    return res.sendStatus(400);
+  }
+
+  // 2. Gérer l'événement 'checkout.session.completed'
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+
+    // Récupérer l'ID de notre commande depuis les métadonnées
+    const orderId = session.metadata.orderId;
+
+    // Mettre à jour la commande dans notre base de données
+    const order = await Order.findById(orderId);
+    if (order) {
+      order.isPaid = true;
+      order.paidAt = new Date();
+      order.paymentDetails.status = session.payment_status; // ex: 'paid'
+      await order.save();
+
+      // Mettre à jour le stock des produits
+      for (const item of order.orderItems) {
+        await Product.updateOne(
+          { _id: item.product },
+          { $inc: { stock: -item.quantity } } // Décrémenter le stock
+        );
+      }
+      console.log(`✅ Order ${orderId} has been paid and stock updated.`);
+    }
+  }
+
+  // 3. Répondre à Stripe pour confirmer la réception de l'événement
+  res.status(200).json({ received: true });
+});
+
 export const paymentController = {
   createCheckoutSession,
+  stripeWebhookHandler,
 };
